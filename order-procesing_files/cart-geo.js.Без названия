@@ -1,0 +1,604 @@
+$('#orderFio').blur(function(){
+	ajaxSessionStore($(this));
+});
+
+$('#orderEmail').blur(function(){
+	ajaxSessionStore($(this));
+});
+
+$('#orderPhone').blur(function(){
+	ajaxSessionStore($(this));
+});
+
+$('#orderAddress').blur(function(){
+	ajaxSessionStore($(this));
+});
+
+// rise up
+
+$('#riseup-on').change(function(){
+    var rise = $('.riseup');
+    if ($(this).is(':checked')) {
+        rise.show();
+        $('#riseup-type').trigger('click');
+        riseupCoast();
+    }
+    else {
+        rise.hide();
+        $('.riseup_floor').hide();
+        riseupCoast(true);
+    }
+
+
+});
+
+$('#riseup-type').change(function(){
+    var riseFloor = $('.riseup_floor');
+    if ($(this).val() == 2) {
+        riseFloor.show();
+    }
+    else {
+        riseFloor.hide();
+    }
+
+    riseupCoast();
+});
+
+$('#riseup_floor').blur(function(){
+    riseupCoast();
+});
+
+$('#riseup_weight').change(function(){
+    riseupCoast();
+});
+
+function initRriseupCoast() {
+    $('#riseup-on').attr('checked', 'checked').trigger('change');
+    $('#riseup-type').trigger('change');
+    $('#riseup_weight').trigger('change');
+    $('#riseup_floor').trigger('change');
+}
+
+
+function riseupCoast(off) {
+    var type = $('#riseup-type').val();
+    var weight = $('#riseup_weight').val();
+    var price = 0;
+
+    if (type == 1) {
+        if (weight == 1) {
+            price = 100;
+        }
+        else if (weight == 2) {
+            price = 200;
+        }
+        else {
+            price = 300;
+        }
+    }
+    // по этажно
+    else if (type == 2) {
+        if (weight == 1) {
+            price = 50;
+        }
+        else if (weight == 2) {
+            price = 70;
+        }
+        else {
+            price = 100;
+        }
+    }
+
+    var total = 0;
+
+    if (type == 2) {
+        // этаж умножаем на цену
+        total = parseInt($('#riseup_floor').val()) * price;
+    }
+    else {
+        total = price;
+    }
+
+
+    var clearPrice = new Number($('.deliveryPrice').first().html());
+    if (lastRiseupPrice > 0) {
+        clearPrice = new Number($('.deliveryPrice').first().html()) - lastRiseupPrice;
+    }
+
+
+
+    if (total && total > 0 && !off) {
+        lastRiseupPrice = total;
+
+        var toSet = clearPrice+total;
+
+        $('.deliveryPrice').first().html(toSet);
+        $('#totalPrice').text((totalPrice+toSet));
+    }
+    else {
+        lastRiseupPrice = 0;
+        if (clearPrice !== null) {
+            $('.deliveryPrice').first().html(clearPrice);
+            $('#totalPrice').text((totalPrice+clearPrice));
+        }
+    }
+
+}
+// /rise up
+
+// u-person
+$('#bez_on').click(function(){
+    var bezJq = $('#bez');
+
+    if ($(this).is(':checked') || $(this).data("checked")) {
+        bezJq.show();
+        $(this).removeData("checked");
+        $('.notForUperson').hide();
+        $('.forUperson').show();
+
+        $('.notForBeznal').hide();
+
+        $('.payment-sel-bez').trigger('click');
+
+
+        if ($("#formEditOrderCity").val() == 9 || $("#formEditOrderCity").val() == 11) {
+            $("#formEditOrderCity").val(0);
+        }
+
+        $("#formEditOrderCity option[value=9]").hide();
+        $("#formEditOrderCity option[value=11]").hide();
+
+
+    }
+    else{
+        bezJq.hide();
+        $("#formEditOrderCity option[value=9]").show();
+        $("#formEditOrderCity option[value=11]").show();
+
+        $('.forUperson').hide();
+        if ($('#formEditOrderCity').val() == 3 || $('#formEditOrderCity').val() == 9 || $('#formEditOrderCity').val() == 11) {
+            $('.halfPayment').show();
+            $('.notForBeznal').show();
+            $('.payment-sel-r').trigger('click');
+        }
+        else if ($('#formEditOrderCity').val() > 0) {
+            $('.fullPayment').show();
+            $('.payment-sel-full').trigger('click');
+        }
+    }
+});
+// /u-person
+
+function mkadLenght() {
+	var val = $('#deliveryMkadKm').val();
+	var price = 300;
+    if (typeof lastRiseupPrice !== 'undefined') {
+        price = price + lastRiseupPrice;
+    }
+	if (val > 0) {
+		// код для огругления до десятков
+// 		alert(val);
+// 		var m = val.match(/^(\d+)?(\d)$/);
+// 		if (m && m[1] && m[2]) {
+// 			if (m[2] < 5) {
+// 				val = parseInt(m[1]+"0");
+// 			}
+// 			else {
+// 				val = parseInt(m[1]+"0")+10;
+// 			}
+// 		}
+		price = (val*30)+price;
+	}
+
+	$('.deliveryPrice').first().text(price);
+           if ($('#formEditOrderCity').val() <= 2 || $('#formEditOrderCity').val() == 5) {
+                $('#totalPrice').text((totalPrice+price));
+           }
+
+}
+
+$('#deliveryMkadKm').keyup(function(){
+	mkadLenght();
+});
+
+
+function ajaxSessionStore(input) {
+
+	// пока что отключен, до лучших времен
+	return true;
+	
+	$.ajax({
+		url: "http://intex-online.ru/?s=ajaxstore&"+input.attr('name')+"="+input.val(),
+		success: function(d){
+			return true;
+		}
+	});
+}
+
+var priceForRegion = parseInt($('.deliveryPrice').last().html());
+var totalPriceForRegion = 0;
+var nplTkPercent = Math.ceil(totalPrice*0.03);
+var previousRegion = '';
+function toggleCityFields(self) {
+	var val = $(self).val();
+    $('.payment-sel-r').removeAttr('disabled');
+
+	if (val==1 || val==5) {
+		$('.orderCityForRegions').hide();
+		$('.orderCityForDc').show();
+		$('.orderHouse').show();
+		$('.orderDescUser').show();
+		$('.notForRegion').show();
+        if (val == 5) {
+            $('#deliveryMkadKmLabel').text('города');
+//            $('#deliveryMkadKmBlock').hide();
+        }
+        else {
+            $('#deliveryMkadKmLabel').text('МКАД');
+        }
+		
+	}
+	else if (val==2 || val==3 || val == 9 || val == 11) {
+		$('.orderCityForMO').hide();
+		$('.orderCityForRegions').show();
+		$('.orderCityForDc').hide();
+		$('.orderHouse').show();
+		if (val == 2) {
+			$('.orderCityForMO').show();
+			$('#orderDescUserLabel').html("Укажите точный адрес: *");
+		}
+		$('.orderDescUser').show();
+		$('.notForRegion').show();
+		$('.orderCityForRegionsHide').hide();
+
+		if (val == 11) {
+            $('.payment-sel-r').val(2);
+        }
+	}
+	else {
+        $('.rnp11').hide();
+		$('.orderCityForRegions').hide();
+		$('.orderCityForDc').hide();
+		$('.orderHouse').hide();
+		$('.orderCityForMO').hide();
+		$('.orderDescUser').hide();
+		$('#orderDescUserLabel').html("Примечания:");
+	}
+	$('.forRegionAlert').hide();
+
+	if (val == 3 || val == 9 || val == 11) {
+		$('#emailFormLabel').html("E-Mail: *");
+
+		$('.notForRegion').hide();
+		$('.orderCityForRegions').hide();
+        if (totalPrice < 5000) {
+            $('.deliveryPrice').last().html(300);
+        }
+        else {
+            $('.deliveryPrice').last().html(500);
+
+        }
+		priceForRegion = parseInt($('.deliveryPrice').last().html());
+		totalPriceForRegion = parseInt($('#totalPrice').html());
+//		$('#totalPrice').html((totalPriceForRegion-priceForRegion)+500);
+
+
+
+        if ((val == 3 || val == 9 || val == 11) && totalPrice < 5000) {
+            $('#totalPrice').html(totalPrice + 300);
+        }
+        else {
+            $('#totalPrice').html(totalPrice + 500);
+        }
+		$('#orderDescUserLabel').html("Укажите точный адрес: *");
+		
+// 		if (totalPrice && totalPrice < 3000) {
+// 			$('.forRegionAlert').show();
+// 			$('.forRegion').hide();
+// 			$('.orderDescUser').hide();
+// 		}
+// 		else {
+// 			$('.forRegion').show();
+// 		}
+
+		$('.forRegion').show();
+	}
+	else {
+		if (val != 2)
+			$('#orderDescUserLabel').html("Примечания:");
+
+		$('#emailFormLabel').html("E-Mail: ");
+		$('.forRegion').hide();
+		$('#totalPrice').text((totalPrice+priceForRegion));
+	}
+
+	if (val == 4 || val == 6 || val == 8 || val == 10) {
+        $('#totalPrice').html(totalPrice);
+
+        $('#totalAmountScore').hide();
+        $('#totalAmountSelfDeliveryScore').show();
+                     
+		$('.selfDelivery').hide();
+        $('.notForRegion').hide();
+
+        if (val == 8) {
+            $('.selfDeliveryMapNosov').show();
+        }
+        else if (val == 6) {
+            $('.selfDeliveryMapSpb').show();
+        }
+        else {
+            $('.selfDeliveryMapMsk').show();
+        }
+
+        $('.deliveryDate').show();
+        $('.selfdeliveryDateLabel').show();
+
+        $('.selfDeliveryPayment').show();
+        $('.selfDeliveryPayment').find('select[name=payment] option[value="1"]').text('Оплатить наличными');
+
+
+        if (val == 8 && $('.nosovNotExist').size() > 0) {
+            $('.selfdeliveryDateLabelNosov').show();
+        }
+        else {
+            $('.selfdeliveryDateLabelNosov').hide();
+        }
+
+//        if (val == 6 || val == 8) {
+//            $('tbody.selfDeliveryDate').hide();
+//            $('tbody.deliveryDate').show();
+//        }
+//        else {
+            $('tbody.selfDeliveryDate').show();
+            $('tbody.deliveryDate').hide();
+
+//        }
+
+	}
+	else {
+        $('.selfDeliveryPayment').find('select[name=payment] option[value="1"]').text('Оплатить наличными курьеру');
+        $('#totalAmountScore').show();
+        $('#totalAmountSelfDeliveryScore').hide();
+                     
+		$('.selfDelivery').show();
+		$('.selfDeliveryMap').hide();
+        $('.selfdeliveryDateLabelNosov').hide();
+        $('.selfdeliveryDateLabel').hide();
+	}
+
+
+    $('.selfDeliveryPayment').find('select[name=payment] option[value="10"]').hide();
+    if ($('.selfDeliveryPayment').find('select[name=payment]').val() == 10 && val > 2) {
+        $('.selfDeliveryPayment').find('select[name=payment]').val(0).trigger('change');
+    }
+	if (val == 1 || val == 2) {
+        $('.selfDeliveryPayment').find('select[name=payment] option[value="10"]').show();
+    }
+
+    if ($('#bez_on').is(':checked')) {
+        $('.notForUperson').hide();
+        $('.forUperson').show();
+        $('.payment-sel-bez').trigger('click');
+    }
+    else if (val == 3 || val == 9 || val == 11) {
+        $('.payment-sel-r').trigger('click').trigger('change');
+    }
+    else {
+        $('.payment-sel-full').trigger('click');
+    }
+
+    if (val == 11) {
+        $('.payment-sel-r').attr('disabled', 'disabled');
+    }
+
+    if (val == 9 || val == 11) {
+        $('.tk-common').hide();
+        $('.tk-npl-hide-city').hide();
+        $('.tk-npl').show();
+        $('.transportNpl').trigger('change');
+        $('tbody.selfDeliveryPayment').hide();
+        $('#nplTkPercent').html(nplTkPercent);
+        $('#totalPrice').html(new Number($('#totalPrice').text())+nplTkPercent);
+
+        if (previousRegion != 9 && previousRegion != 11) {
+            $('#totalAmountScore').html(new Number($('#totalAmountScore').text()) + 0);
+        }
+        $('.selfDeliveryMapNP').show();
+
+        if (val == 11) {
+            $('.rnp11').show();
+        }
+
+    }
+    else if (val == 3) {
+        $('.tk-common').show();
+        $('.tk-npl').hide();
+        $('tbody.selfDeliveryPayment').show();
+    }
+    else {
+        $('.tk-npl').hide();
+    }
+
+    if ((previousRegion == 9 && val != 9) || (previousRegion == 11 && val != 11)) {
+        $('#totalAmountScore').html(new Number($('#totalAmountScore').text()) - 0);
+    }
+
+    previousRegion = val;
+
+    mkadLenght();
+}
+
+
+
+//google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+/**
+ * Manager list
+ */ 
+$('#openManager').click(function(){
+	$('#managerSelect').toggle();
+});
+
+/**
+ * Transport radio
+ */
+$('.transportRadio').click(function(){
+	var obj = $(this);
+	$('.transportRadioDisabled').attr("disabled", "1");
+	$('.transportRadioDisabled').hide();
+	
+	if (obj.val() > 1) {
+		obj.closest('p').find('.transportRadioDisabled').removeAttr("disabled").show();
+	}
+});
+
+/**
+ * Bank score
+ */
+$('.payment-sel').click(function() {
+//    if ($(this).val() == 2) {
+//        $('tbody.selfDeliveryDate').hide();
+//        $('tbody.deliveryDate').hide();
+//        $('tbody.deliveryTime').hide();
+//    }
+//    else {
+        var region = $('#formEditOrderCity').val();
+
+        if (region == 4 || region == 6 || region == 8) {
+            // self
+            $('tbody.selfDeliveryDate').show();
+            $('tbody.deliveryDate').hide();
+            $('tbody.deliveryTime').hide();
+        }
+        else if (region == 3 || region == 9 || region == 11 || region == 0) {
+            // hide all
+            $('tbody.selfDeliveryDate').hide();
+            $('tbody.deliveryDate').hide();
+            $('tbody.deliveryTime').hide();
+        }
+        else {
+            // delivery
+            $('tbody.selfDeliveryDate').hide();
+            $('tbody.deliveryDate').show();
+            $('tbody.deliveryTime').show();
+        }
+//    }
+});
+
+
+$('#tel1').keyup(function(){
+    var v = this.value;
+    if (/\D+/g.test(v)) {
+        $(this).val(v.replace(/\D+/g, ''));
+        return;
+    }
+    if (/^(7|8)/.test(v)) {
+        $(this).val(v.replace(/^(7|8)/, ''));
+    }
+
+    if (v.length >=3 ) {
+        $('#tel2').trigger("focus");
+    }
+});
+
+$('#tel2').keyup(function(){
+    var v = this.value
+    if (v.length == 0 ) {
+        $('#tel1').trigger("focus");
+    }
+    if (/\D+/g.test(v)) {
+        $(this).val(v.replace(/\D+/g, ''));
+        return;
+    }
+});
+
+$('input[name=phone_equal]').click(function () {
+    var ch = $(this);
+
+    if (ch.is(':checked')) {
+        $('#orderPhone2').attr('disabled', 'disabled').removeAttr('required');
+    }
+    else {
+        $('#orderPhone2').attr('required', 'required').removeAttr('disabled');
+    }
+});
+
+$('.transportNpl').change(function(){
+    var val = $(this).val(),
+        tk = new CartTk();
+
+    if (val == 3) {
+        tk.pak($(this).data('tk-city'));
+
+        // для рнп спб, город пэк всегда спб.
+        if ($('#formEditOrderCity').val() == 11) {
+            tk.pak(463);
+        }
+
+    }
+
+});
+
+$( window ).load(function() {
+    if ($('#formEditOrderCity').val() == 9 || $('#formEditOrderCity').val() == 11) {
+        $('.transportNpl').trigger('change');
+    }
+});
+
+var geoForm = $('#geo-cart-order-form-js');
+geoForm.on("blur", 'input[type=text]', function(){
+    saveUserInput();
+});
+
+geoForm.on("change", 'select', function(){
+    saveUserInput();
+});
+
+geoForm.on("blur", 'textarea', function(){
+    saveUserInput();
+});
+
+
+function saveUserInput() {
+
+    $.ajax({
+        url: "index.php?cart_action=5",
+        type: 'POST',
+        data: geoForm.serialize()
+    }).done(function(data) {
+
+    });
+}
+
+
+var cacheCityName = {};
+$("#q-city-name").autocomplete({
+    minLength: 2,
+    source: function (request, response) {
+        var term = request.term;
+        if (term in cacheCityName) {
+            response(cacheCityName[ term ]);
+            return;
+        }
+
+        $.getJSON("/?cart_action=7", request, function (data, status, xhr) {
+            cacheCityName[ term ] = data;
+            response(data);
+        });
+    },
+    select: function(event, ui) {
+        $('#q-city-id').val(ui.item.id);
+
+    },
+    focus: function( event, ui ) {
+
+    }
+}).data("autocomplete")._renderItem = function (ul, item) {
+    return $("<li></li>")
+        .data("item.autocomplete", item)
+        .append("<a>" + item.label + "</a>")
+        .appendTo(ul);
+};

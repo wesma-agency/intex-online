@@ -1,0 +1,137 @@
+function validate(theform, shop, priceFull) {
+
+    if (theform.tel1 && theform.tel2) {
+        theform.phone.value = '';
+    }
+    if (theform.tel1 && theform.tel1.value.length == 3 && theform.tel2 && theform.tel2.value.length == 7) {
+        theform.phone.value = '+7' + theform.tel1.value + theform.tel2.value;
+    }
+
+    if(theform.promo && $(theform.promo).hasClass('required') && theform.promo.value.length != 6 ) {
+        alert("Необходимо указать промокод!");
+        return false;
+    }
+
+    if ($('#sign_on')[0] && !$('#sign_on').is(':checked')) {
+        alert("Необходимо принять условия пользовательского соглашения!");
+        return false;
+    }
+
+    if ($('#formEditOrderCity').val() == 2 && $('select[name="city"]').val() < 1) {
+        alert("Выберите направление!");
+        return false;
+    }
+
+    if ($('#bez_on').is(':checked')) {
+        if (theform.firstname.value == "") {
+            alert("Введите ваше Имя!");
+            return false;
+        }
+    }
+    else if ($('#formEditOrderCity').val() == 3 && (theform.firstname.value == "" || theform.lastname.value == "" || theform.thirdname.value == "")) {
+        alert("Введите ваше Фамилию, Имя, Отчество!");
+        return false;
+    }
+    else if ($('#formEditOrderCity').val() != 3 && theform.firstname.value == "") {
+        alert("Введите ваше Имя!");
+        return false;
+    }
+
+    if ($('#formEditOrderCity').val() == 3 && !$('#bez_on').is(':checked') &&
+        (theform.passportserial.value == "" || theform.passportnumber.value == "")) {
+        alert("Введите ваши паспортные данные!");
+        return false;
+    }
+    else if ($('#formEditOrderCity').val() == 9 && !$('#bez_on').is(':checked') &&
+        (theform.passportserial.value == "" ||
+            theform.passportnumber.value == "" ||
+            theform.passportwhen.value == ""
+        )) {
+        alert("Введите ваши паспортные данные!");
+        return false;
+    }
+
+    if ($('#bez_on').is(':checked') && (theform.bez_name.value == '' || theform.bez_inn.value == '' || theform.bez_kpp.value == '' ||
+        theform.bez_rc.value == '' || theform.bez_bik.value == '' || theform.bez_kc.value == '' ||
+        theform.bez_bank.value == '' || theform.bez_uadres.value == '')) {
+        alert("Укажите данные для юридического лица!");
+        return false;
+    }
+
+    if (($('#formEditOrderCity').val() == 3) && theform.city_name.value == '') {
+        alert("Укажите ваш город!");
+        return false;
+    }
+
+        if (theform.phone.value == '') {
+        alert("Не забудьте оставить телефоный номер!");
+        return false;
+    }
+
+    if (theform.email.value == '' && theform.cityType.value == 3) {
+        alert("Не забудьте оставить ваш E-mail!");
+        return false;
+    }
+
+    else if (theform.email.value == '' && (theform.payment.value == 3 || theform.payment.value == 5)) {
+        alert("Не забудьте оставить ваш E-mail!");
+        return false;
+    }
+
+    if (theform.cityType.value == 0) {
+        alert("Не забудьте указать адрес!");
+        return false;
+    }
+
+    if ($('.tag-select').size() > 0 && !$('.tag-select').hasClass('edit-hidden')) {
+        if ($('.tag-item:checked').size() == 0) {
+            alert("Не забудьте указать теги!");
+            return false;
+        }
+    }
+
+    var cityType = $('#formEditOrderCity').val();
+
+//    if (!$('#bez_on').is(':checked')) {
+
+        if (theform.deliverydate.value == '' && (cityType <= 2 || cityType == 5)) {
+            alert("Не забудьте указать дату доставки!");
+            return false;
+        }
+
+        if (theform.selfDeliverydate.value == '' && (cityType == 4 || cityType == 6 || cityType == 8)) {
+            alert("Не забудьте указать дату самовывоза!");
+            return false;
+        }
+//    }
+
+    if (typeof($('input[name=phone_equal]')[0]) !== 'undefined' && !$('input[name=phone_equal]').is(':checked') && $('#orderPhone2').val().length != 12) {
+        alert("Не забудьте указать второй номер телефона!");
+        return false;
+    }
+
+    theform.submit();
+
+    //  return true;
+}
+
+function gotoPriceOrderTarget(shop, orderId, priceFull) {
+    if (typeof shop !== 'undefined' && typeof priceFull !== 'undefined') {
+
+        setTimeout(function () {
+            if (shop == 1) {
+                yaCounter47330.reachGoal('SEND_ORDER', {
+                    price: priceFull,
+                    order_id: orderId
+                });
+            }
+            else if (shop == 2) {
+                yaCounter22551133.reachGoal('SEND_ORDER', {
+                    price: priceFull,
+                    order_id: orderId
+                });
+            }
+        }, 10000);
+    }
+}
+

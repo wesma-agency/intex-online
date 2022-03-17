@@ -1,0 +1,54 @@
+;(function(document, window) {
+
+	window.Clicktex = window.Clicktex || {};
+
+	const options = {
+		json: 'https://code.clicktex.com/v3.0/data.php?cid=17468',
+		version: '0',
+		appJsURI: 'https://static.clicktex.com/app.js',
+		appCssURI: 'https://static.clicktex.com/app.css',
+		initDelay: 0,
+		ctxServicesBlocked: ""
+	};
+
+	window.Clicktex.options = options;
+
+	if (typeof window.Clicktex.loaded !== 'undefined' && window.Clicktex.loaded === true) return;
+	window.Clicktex.loaded = true;
+
+	if (window.self !== window.top) { console.warn('ctx in frame'); return false; }
+
+	var scriptTag = document.createElement('script');
+
+	scriptTag.type = 'text/javascript';
+	scriptTag.async = true;
+	scriptTag.src = `${options.appJsURI}?v=${options.version}`;
+
+	var linkTag = document.createElement('link');
+
+	linkTag.id = 'clicktex-stylesheet';
+	linkTag.rel = 'stylesheet';
+	linkTag.href = `${options.appCssURI}?v=${options.version}`;
+
+	var blockingStyleTag = document.createElement('style');
+
+	if (options.ctxServicesBlocked)
+		blockingStyleTag.innerHTML = options.ctxServicesBlocked + '{display:none!important;visibility:hidden!important}';
+
+	var addTags = function() {
+		var script = document.getElementsByTagName("script")[0];
+		document.head.appendChild(linkTag);
+		document.head.appendChild(blockingStyleTag);
+		script.parentNode.insertBefore(scriptTag, script);
+	};
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', addTags, false);
+	} else {
+		addTags();
+	}
+
+	//document.addEventListener('DOMContentLoaded', addTags, false);
+	//(window['opera'] === '[object Opera]') ? document.addEventListener('DOMContentLoaded', addTags, false) : addTags();
+
+})(document, window);

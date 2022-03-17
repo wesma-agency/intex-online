@@ -1,0 +1,92 @@
+/**
+ * init google maps
+ */
+function initMap() {
+    var defaultBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(55.748758, 37.6174),
+        new google.maps.LatLng(55.748758, 37.6174)
+    );
+
+    var MoBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(55.3832283,36.7556798),
+        new google.maps.LatLng(56.4391212,38.2263715)
+    );
+
+
+    var autocompleteMOCity = new google.maps.places.Autocomplete(document.getElementById('googleCity'), {
+        types: ['(cities)'],
+        componentRestrictions: {country: 'ru'},
+        bounds: MoBounds
+    });
+
+    var autocomplete = new google.maps.places.Autocomplete(document.getElementById('googleStreet'), {
+        types: ['geocode'],
+        componentRestrictions: {country: 'ru'}
+    });
+
+    var autocompleteDcStreet = new google.maps.places.Autocomplete(document.getElementById('googleDcStreet'), {
+        types: ['geocode'],
+        componentRestrictions: {country: 'ru'},
+        bounds: defaultBounds
+    });
+
+
+    $('#googleDcStreet').bind("blur", function() {
+        var place = autocompleteDcStreet.getPlace();
+        if (place && place.geometry && place.geometry.location) {
+            $('#latitude').val(place.geometry.location.lat());
+            $('#longitude').val(place.geometry.location.lng());
+        }
+    });
+
+
+    $('#googleStreet').bind("blur", function(){
+        var place = autocomplete.getPlace();
+        if (place && place.geometry && place.geometry.location) {
+            $('#latitude').val(place.geometry.location.lat());
+            $('#longitude').val(place.geometry.location.lng());
+        }
+    });
+
+
+    $('googleCity').bind("blur", function(){
+// 			var place = autocompleteMOCity.getPlace();
+// 			if (place && place.geometry && place.geometry.location) {
+// 				$('#latitude').val(place.geometry.location.lat());
+// 				$('#longitude').val(place.geometry.location.lng());
+// 			}
+// 			else {
+// 				$('#latitude').val('');
+// 				$('#longitude').val('');
+// 			}
+    });
+
+    google.maps.event.addListener(autocomplete, 'place_changed', function() {
+    });
+
+    google.maps.event.addListener(autocompleteMOCity, 'place_changed', function() {
+        var place = autocomplete.getPlace();
+        if (place || place.geometry.location) {
+            $('#latitude').val(place.geometry.location.lat());
+            $('#longitude').val(place.geometry.location.lng());
+        }
+        else {
+            $('#latitude').val('55.75578');
+            $('#longitude').val('37.615149');
+        }
+    });
+
+    google.maps.event.addListener(autocompleteDcStreet, 'place_changed', function() {
+        var place = autocompleteDcStreet.getPlace();
+        if (place || place.geometry.location) {
+            $('#latitude').val(place.geometry.location.lat());
+            $('#longitude').val(place.geometry.location.lng());
+        }
+        else {
+            $('#latitude').val('55.75578');
+            $('#longitude').val('37.615149');
+        }
+
+    });
+}
+

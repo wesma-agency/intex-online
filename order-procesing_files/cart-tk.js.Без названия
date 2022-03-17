@@ -1,0 +1,91 @@
+// tk companies api
+function CartTk() {
+    // пэк
+    this.pak = function (city) {
+
+        $('.tk-calc').html("<label>Загрузка...</label><br/>");
+        $.ajax({
+            url: '/index.php?cart_action=6&tk=3&tk_action=1'
+
+        }).done(function(data) {
+            $('.tk-calc').html("<label>Город получения груза *:</label><br/>"+data);
+            var cityObj = $('select[name=pecom_city]');
+            cityObj.removeAttr('disabled');
+            cityObj.change(function() {
+                var val = $(this).val();
+                var cityLabel = $(this).find('option[value="' + val + '"]').text();
+                $('.tk-calc').find('.tk-result').remove();
+                if (val > 0) {
+                    $.ajax({
+                        url: '/index.php?cart_action=6&tk=3&tk_action=2&city=' + val,
+                        data: $('.uninumber-param-js').html()
+                    }).done(function (data) {
+
+                        var json = $.parseJSON(data);
+
+                        if (json.coast && json.coast > 0) {
+
+                            var expdPrice = parseInt($('input[name=expd_price]').val());
+
+                            var percent = Math.ceil(totalPrice * 0.03);
+                            var prePayment = Math.ceil(((json.coast * 2) + expdPrice + percent));
+
+                            // если это СПБ РНП, и город СПБ, то предоплата всегда ноль.
+                            if ($('#formEditOrderCity').val() == 11 && val == 463) {
+                                prePayment = 0;
+                                cityObj.attr('disabled', 'disabled');
+                            }
+
+
+                            var tkResult = "<div class=\"tk-result\"><br/>" +
+                                "<label><b>Стоимость доставки:</b> </label>" + json.coast + " руб.<br/>";
+                            if (json.time) {
+                                tkResult += "<label><b>Ориентировочные сроки перевозки с доставкой в сутках:</b> </label>" + json.time + "<br/>";
+                            }
+                            //tkResult += "<label><b>Предоплата:</b> </label>" + prePayment + " руб.<br/><br/>";
+
+                            tkResult += '<input type="hidden" name="transportDeliveryPrice" value="' + json.coast + '">' +
+                                '<input type="hidden" name="totalPrePayment" value="' + prePayment + '">' +
+                                '<input type="hidden" name="transportCityLabel" value="' + cityLabel + '">';
+
+                            tkResult += "</div>";
+
+                            $('tbody.selfDeliveryPayment').show();
+                            $('.prePaymentRegion').show();
+                        }
+                        else {
+                            $('tbody.selfDeliveryPayment').hide();
+                            $('.prePaymentRegion').hide();
+                            var tkResult = "<div class=\"tk-result\"><br/>" +
+                                "<label><b>Доставка в данный город временно невозможна!</b> </label><br/></div";
+
+                            prePayment = 0;
+
+                        }
+
+                        $('#totalPrePayment').html(prePayment);
+                        $('#totalPrePaymentRemainder').html(new Number($('#totalPrice').html())-prePayment);
+
+                        $('.tk-calc').find('.tk-result').remove();
+                        $('.tk-calc').append(tkResult);
+                    });
+                }
+                else {
+                    $('tbody.selfDeliveryPayment').hide();
+                    $('.prePaymentRegion').hide();
+
+                    var prePayment = 0;
+                    $('#totalPrePayment').html(prePayment);
+                    $('#totalPrePaymentRemainder').html(new Number($('#totalPrice').html())-prePayment);
+                }
+            });
+
+            if (city > 0) {
+                cityObj.val(city).trigger('change');
+            }
+        });
+
+
+    };
+
+}
